@@ -5,24 +5,22 @@ __version__ = '0.0.2'
 s = requests.Session()
 
 def transform_listing(x):
-    try:
-        return {
-            'id': x['rets']['mls_id'],
-            'price': x['cur_data']['price'],
-            'address': x['location']['address'],
-            'county': x['location']['county'],
-            'city': x['location']['locality'],
-            'sqft': x['cur_data']['sqft'] if x['cur_data']['sqft'] else None,
-            'bedrooms': x['cur_data']['beds'],
-            'baths_full': x['cur_data']['baths'],
-            'baths_part':  x['cur_data']['half_baths'],
-            'year_blt': x['cur_data']['year_blt'],
-            'lat': x['latitude'],
-            'lng': x['longitude'],
-        }
-    except Exception as e:
-        print(e)
-        print(x)
+    # null is listed as '0' or ''
+    sqft = int(x['cur_data']['sqft']) if x['cur_data']['sqft'] else None
+    return {
+        'id': x['rets']['mls_id'],
+        'price': int(x['cur_data']['price']),
+        'address': x['location']['address'],
+        'county': x['location']['county'],
+        'city': x['location']['locality'],
+        'sqft': sqft or None,
+        'bedrooms': x['cur_data']['beds'],
+        'baths_full': x['cur_data']['baths'],
+        'baths_part':  x['cur_data']['half_baths'],
+        'year_blt': x['cur_data']['year_blt'],
+        'lat': x['latitude'],
+        'lng': x['longitude'],
+    }
 
 def get_listings_inner(offset=0, per_page=100, min_beds='', min_baths='', max_price=''):
 
@@ -53,8 +51,8 @@ def get_listings(per_page=100, **kwargs):
     meta = {
         'total_results': data['organic_results']['total_results'],
         'results_returned': data['organic_results']['results_returned'],
-        'offset': 'offset',
-        'search_result_ids': data['organic_results']['SEARCH_RESULT_IDS'],
+        'offset': '0',
+        # 'search_result_ids': data['organic_results']['SEARCH_RESULT_IDS'],
     }
     
     for listing in data['organic_results']['search_results']:
@@ -68,7 +66,7 @@ def get_listings(per_page=100, **kwargs):
             'total_results': data['organic_results']['total_results'],
             'results_returned': data['organic_results']['results_returned'],
             'offset': offset,
-            'search_result_ids': data['organic_results']['SEARCH_RESULT_IDS'],
+            # 'search_result_ids': data['organic_results']['SEARCH_RESULT_IDS'],
         }
         for listing in data['organic_results']['search_results']:
             yield meta, transform_listing(listing)
